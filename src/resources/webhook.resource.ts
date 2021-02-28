@@ -9,11 +9,16 @@ import {
   validateSlackWebhook
 } from '../services/slack.service';
 import {
+  SlackCreateAppAuthRequestBody,
   SlackEventBody,
   SlackEventUrlVerificationBody,
   SlackLogBody
 } from '../schemas/slack.schema';
-import { getOrCreateUser } from '../services/user-profile.service';
+import {
+  createServiceAuth,
+  getOrCreateUser,
+  getUserByUsername
+} from '../services/user-profile.service';
 import { createEntry } from '../services/entry.service';
 
 export default unthinkResource({
@@ -42,6 +47,48 @@ export default unthinkResource({
       },
       {
         middleware: [validateSlackToken, validateSlackWebhook]
+      }
+    ),
+
+    /**
+     * Create App auth integration via Slack
+     */
+    data(
+      '/slack/create-auth',
+      {
+        post: async (context) => {
+          const body = context.body as SlackCreateAppAuthRequestBody;
+          if (!body.user_name) {
+            return DataResult.error(
+              'Invalid request: user_name field is missing.'
+            );
+          }
+
+          try {
+            // TODO: maybe allow "getOrCreateUser"?
+            const user = await getUserByUsername(body.user_name);
+            const [, app] = await createServiceAuth(user._id, 'slack');
+            return DataResult.ok({
+              value: {
+                // only show to the user who talked to the bot
+                response_type: 'ephemeral',
+                text:
+                  'Copy/paste this authentication token into the Coffee Leaderboard App:',
+                attachments: [
+                  {
+                    text: app.serviceToken
+                  }
+                ]
+              }
+            });
+          } catch (e) {
+            context.logger.error(e);
+            return DataResult.error('Failed to create integration.');
+          }
+        }
+      },
+      {
+        middleware: [validateSlackToken]
       }
     ),
 

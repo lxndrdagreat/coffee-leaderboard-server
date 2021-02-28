@@ -37,3 +37,5 @@ export const databaseUser: string = getEnvironmentValue('DATABASE_ROOT_USER');
 export const databasePassword: string = getEnvironmentValue(
   'DATABASE_ROOT_PASSWORD'
 );
+
+export const appPepper: string = getEnvironmentValue('APP_TOKEN_PEPPER');
