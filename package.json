@@ -1,0 +1,61 @@
+{
+  "name": "coffee-leaderboard-server",
+  "version": "0.1.0",
+  "description": "A coffee consumption leaderboard",
+  "main": "lib/server/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node lib/server.js",
+    "watch-server": "tsc -w --project src/tsconfig.json",
+    "lint": "prettier --check \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "clean-build": "shx rm -rf ./lib",
+    "build": "npm run clean-build && npm run build-server",
+    "build-server": "tsc --project ./tsconfig.json",
+    "seed-database": "node lib/seed-data.js"
+  },
+  "keywords": [
+    "typescript",
+    "express"
+  ],
+  "author": "Dan Alexander",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.2",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.11",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/mongodb": "^3.6.8",
+    "@types/nanoid": "^2.1.0",
+    "@types/node": "^14.14.26",
+    "@types/ws": "^7.4.0",
+    "onchange": "^7.1.0",
+    "pino-pretty": "^4.5.0",
+    "pre-commit": "^1.2.2",
+    "prettier": "^2.2.1",
+    "shx": "^0.3.3",
+    "typescript": "^4.1.5"
+  },
+  "dependencies": {
+    "@epandco/unthink-foundation": "^2.1.0",
+    "@epandco/unthink-foundation-express": "^2.0.1",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mongodb": "^3.6.4",
+    "nanoid": "^3.1.20",
+    "ws": "^7.4.3"
+  },
+  "pre-commit": {
+    "run": [
+      "lint"
+    ],
+    "silent": true
+  },
+  "unthink": {
+    "version": "3.0.7"
+  },
+  "contributors": [],
+  "private": true
+}
