@@ -45,6 +45,21 @@ export async function getUserByUsername(username: string): Promise<UserSchema> {
   return user;
 }
 
+export async function getOrCreateUser(username: string): Promise<UserSchema> {
+  try {
+    return await getUserByUsername(username);
+  } catch (e) {
+    if (!(e instanceof UserNotFoundError)) {
+      throw e;
+    }
+  }
+  try {
+    return await createUser(username);
+  } catch (e) {
+    throw e;
+  }
+}
+
 export async function createUser(username: string): Promise<UserSchema> {
   const users = await getUserCollection();
 
