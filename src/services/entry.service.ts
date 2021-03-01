@@ -48,6 +48,8 @@ export async function getEntryById(
   return entry;
 }
 
+const yesterdayRegex = /[\w\d\s]*(-y\s*\d+|-y\s+|-y$|--yesterday\s*\d+|--yesterday\s+|--yesterday$)[\w\s]*$/i;
+
 export async function createEntry(
   userId: ObjectId,
   source: EntrySource,
@@ -61,6 +63,20 @@ export async function createEntry(
   }
 
   const entries = await getEntryCollection();
+
+  const match = source.text.match(yesterdayRegex);
+  if (match && match.length) {
+    const group = match[1].replace(/-y\s*|--yesterday\s*/gi, '');
+    let daysAgo = 0;
+    if (group.length) {
+      try {
+        daysAgo = parseInt(group.trim(), 10);
+      } catch (e) {}
+    }
+    if (daysAgo > 0) {
+      date.setDate(date.getDate() - daysAgo);
+    }
+  }
 
   const result = await entries.insertOne({
     user: userId,

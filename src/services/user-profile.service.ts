@@ -183,3 +183,30 @@ export async function confirmServiceAuth(
   }
   return [user, appInfo];
 }
+
+export async function getUserByAppToken(
+  appToken: string
+): Promise<{ _id: ObjectId; userName: string; app: string }> {
+  const users = await getUserCollection();
+  const found = await users
+    .aggregate<{ _id: ObjectId; userName: string; app: string }>([
+      {
+        $unwind: '$tokens'
+      },
+      {
+        $match: {
+          'tokens.appToken': appToken
+        }
+      },
+      {
+        $project: {
+          userName: 1
+        }
+      }
+    ])
+    .toArray();
+  if (found.length === 0) {
+    throw new UserNotFoundError();
+  }
+  return found[0];
+}

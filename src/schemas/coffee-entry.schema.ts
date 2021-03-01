@@ -11,6 +11,8 @@ export type EntrySource =
     }
   | {
       type: 'app';
+      app: string;
+      text: string;
     };
 
 export interface CoffeeEntrySchema {
