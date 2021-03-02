@@ -32,9 +32,16 @@ On the deployment server, make sure to set up the environment variables.
 
 ### Seed data
 
-Seed data files ("users.json" and "entries.json") can be copied to the container:
+Once the docker containers are running, seed data files ("users.json" and
+"entries.json") can be copied to the container:
 
 ```
 docker cp ./entries.json coffee_api:/home/node/app/entries.json
 docker cp ./users.json coffee_api:/home/node/app/users.json
+```
+
+Then, run the following to import the data:
+
+```
+docker-compose exec api npm run seed-database
 ```
