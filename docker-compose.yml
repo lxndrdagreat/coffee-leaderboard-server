@@ -17,7 +17,7 @@ services:
     build:
       context: '.'
     ports:
-      - "${SERVER_PUBLIC_PORT}:${EXPRESS_SERVER_PORT}"
+      - "${SERVER_PUBLIC_PORT}:${SERVER_PORT}"
     volumes:
       - .env:/home/node/app/.env
 
