@@ -15,9 +15,7 @@ function getEnvironmentValue(name: string): string {
   );
 }
 
-export const expressServerPort: number = parseInt(
-  getEnvironmentValue('EXPRESS_SERVER_PORT')
-);
+export const serverPort: number = parseInt(getEnvironmentValue('SERVER_PORT'));
 export const isProduction: boolean = !!(
   process.env.hasOwnProperty('NODE_ENV') &&
   process.env.NODE_ENV &&
@@ -30,6 +28,13 @@ export const appName: string = packageJSON.name;
 export const appVersion: string = packageJSON.version;
 
 export const slackToken: string = getEnvironmentValue('SLACK_TOKEN');
+export const slackClientId: string = getEnvironmentValue('SLACK_CLIENT_ID');
+export const slackClientSecret: string = getEnvironmentValue(
+  'SLACK_CLIENT_SECRET'
+);
+export const slackSigningSecret: string = getEnvironmentValue(
+  'SLACK_SIGNING_SECRET'
+);
 
 export const databaseURL: string = getEnvironmentValue('DATABASE_URL');
 export const databaseName: string = getEnvironmentValue('DATABASE_NAME');

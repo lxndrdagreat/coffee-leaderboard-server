@@ -1,25 +1,16 @@
-import { data, DataResult, unthinkResource } from '@epandco/unthink-foundation';
 import { getLeaderboard } from '../services/leaderboard.service';
+import { FastifyInstance } from 'fastify';
 import { requireAppAuthMiddleware } from '../middleware/require-app-auth.middleware';
 
-export default unthinkResource({
-  name: 'Leaderboard',
-  basePath: '/leaderboard',
-  routes: [
-    data(
-      '/',
-      {
-        get: async (_context) => {
-          const leaderboard = await getLeaderboard();
+export default (server: FastifyInstance) => {
+  server.get('/api/leaderboard', async (request, reply) => {
+    // TODO: move to middleware
+    try {
+      await requireAppAuthMiddleware(request);
+    } catch (e) {
+      return reply.code(403).send(e);
+    }
 
-          return DataResult.ok({
-            value: leaderboard
-          });
-        }
-      },
-      {
-        middleware: [requireAppAuthMiddleware]
-      }
-    )
-  ]
-});
+    return await getLeaderboard();
+  });
+};

@@ -1,21 +1,30 @@
-import * as express from 'express';
 import * as config from './config/config';
-import { UnthinkExpressGenerator } from '@epandco/unthink-foundation-express';
-import { UnthinkGenerator } from '@epandco/unthink-foundation';
-import resourceDefinitions from './resource-definitions';
+import Fastify, { FastifyInstance } from 'fastify';
+import rawBody from 'fastify-raw-body';
+import formBody from 'fastify-formbody';
+import webhooksApi from './resources/webhook.resource';
+import appApi from './resources/app.resource';
+import leaderboardApi from './resources/leaderboard.resource';
 
-const app: express.Application = express();
+const server: FastifyInstance = Fastify({ logger: true });
 
-const expressGen = new UnthinkExpressGenerator(
-  app,
-  (): string => '',
-  config.logLevel
-);
-const unthinkGen = new UnthinkGenerator(expressGen);
+server.register(formBody);
+server.register(rawBody, {
+  global: false,
+  runFirst: true
+});
 
-resourceDefinitions.forEach((rd) => unthinkGen.add(rd));
+webhooksApi(server);
+appApi(server);
+leaderboardApi(server);
 
-unthinkGen.printRouteTable();
-unthinkGen.generate();
+const start = async () => {
+  try {
+    await server.listen(config.serverPort);
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+};
 
-app.listen(config.expressServerPort);
+start();

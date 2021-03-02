@@ -1,55 +1,60 @@
-import {
-  dataMiddleware,
-  MiddlewareResult,
-  RouteContext
-} from '@epandco/unthink-foundation';
-import { slackToken } from '../config/config';
-import { SlackEventBody, SlackMessageBody } from '../schemas/slack.schema';
+import { slackSigningSecret } from '../config/config';
+// import { SlackEventBody, SlackMessageBody } from '../schemas/slack.schema';
+import { createHmacDigestBase64 } from './generate-token';
+import { FastifyRequest } from 'fastify';
 
-export async function hashSlackSignature(
+export function hashSlackMessage(
   requestBody: string,
   timestampHeader: string
-): Promise<string> {
-  const basestring = `v0:${timestampHeader}${requestBody}`;
-  const hashed = `${basestring}`;
-  // hashed = base64.b64encode(hmac.new(settings.SLACK_SIGNING_SECRET, sig_basestring, digestmod=hashlib.sha256).hexdigest())
-  return `v0=${hashed}`;
+): string {
+  return createHmacDigestBase64(
+    slackSigningSecret,
+    `v0:${timestampHeader}:${requestBody}`
+  );
 }
 
-export const validateSlackWebhook = dataMiddleware(
-  (context: RouteContext): MiddlewareResult => {
-    if (
-      !context.headers ||
-      !context.headers.hasOwnProperty('x-slack-signature')
-    ) {
-      return MiddlewareResult.unauthorized();
-    }
-
-    const slackSignature = context.headers['x-slack-signature'];
-    console.log(slackSignature);
-    // TODO: compare signature
-
-    const payload = context.body as SlackEventBody;
-
-    if (!payload.type) {
-      return MiddlewareResult.unauthorized();
-    }
-
-    return MiddlewareResult.continue();
+export function requireSlackAuth(request: FastifyRequest) {
+  if (
+    !request.headers ||
+    !request.headers.hasOwnProperty('x-slack-signature') ||
+    !request.headers.hasOwnProperty('x-slack-request-timestamp')
+  ) {
+    throw new Error('Unauthorized');
   }
-);
+  const wholeSignature = request.headers['x-slack-signature'] as string;
+  const [_version, hash] = wholeSignature.split('=');
+  const timestamp = request.headers['x-slack-request-timestamp'] as string;
+  const signed = hashSlackMessage((request.rawBody as string) || '', timestamp);
 
-export const validateSlackToken = dataMiddleware(
-  (context: RouteContext): MiddlewareResult => {
-    if (!context.body) {
-      return MiddlewareResult.unauthorized();
-    }
-
-    const payload = context.body as SlackMessageBody;
-    if (!payload.token || payload.token !== slackToken) {
-      return MiddlewareResult.unauthorized();
-    }
-
-    return MiddlewareResult.continue();
+  // TODO: enable signature check
+  if (hash !== signed) {
+    throw new Error('Unauthorized');
   }
-);
+}
+
+// export const validateSlackWebhook = dataMiddleware(
+//   (context: RouteContext): MiddlewareResult => {
+//     const payload = context.body as SlackEventBody;
+//
+//     if (!payload.type) {
+//       return MiddlewareResult.unauthorized();
+//     }
+//
+//     return MiddlewareResult.continue();
+//   }
+// );
+//
+// export const validateSlackToken = dataMiddleware(
+//   (context: RouteContext): MiddlewareResult => {
+//     if (!context.body) {
+//       return MiddlewareResult.unauthorized();
+//     }
+//
+//     const payload = context.body as SlackMessageBody;
+//     if (!payload.token || payload.token !== slackToken) {
+//       return MiddlewareResult.unauthorized();
+//     }
+//
+//     return MiddlewareResult.continue();
+//   }
+// );

@@ -1,4 +1,4 @@
-import { pbkdf2 } from 'crypto';
+import { createHmac, pbkdf2 } from 'crypto';
 import { appPepper } from '../config/config';
 
 export async function generatePasswordHash(
@@ -22,4 +22,8 @@ export async function generatePasswordHash(
       }
     );
   });
+}
+
+export function createHmacDigestBase64(key: string, text: string): string {
+  return createHmac('sha256', key).update(text).digest('hex');
 }
