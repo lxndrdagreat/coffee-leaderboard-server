@@ -26,6 +26,8 @@ jobs:
         name: coffee-leaderboard-server
         path: |
           lib
+          .dockerignore
+          Dockerfile
           docker-compose.yml
           package.json
           package-lock.json

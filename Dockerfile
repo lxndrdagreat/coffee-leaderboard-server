@@ -17,4 +17,4 @@ COPY --chown=node:node . .
 # Install dependencies
 RUN npm install --production
 
-CMD [ "node", "./lib/server/server.js" ]
+CMD [ "node", "./lib/server.js" ]

@@ -16,7 +16,7 @@ services:
     container_name: 'coffee_api'
     build:
       context: '.'
-    port:
+    ports:
       - "${SERVER_PUBLIC_PORT}:${EXPRESS_SERVER_PORT}"
     volumes:
       - .env:/home/node/app/.env
