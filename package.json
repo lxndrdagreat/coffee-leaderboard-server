@@ -1,6 +1,6 @@
 {
   "name": "coffee-leaderboard-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A coffee consumption leaderboard",
   "main": "lib/server/server.js",
   "scripts": {
