@@ -20,7 +20,7 @@ leaderboardApi(server);
 
 const start = async () => {
   try {
-    await server.listen(config.serverPort, '127.0.0.1');
+    await server.listen(config.serverPort, '0.0.0.0');
   } catch (err) {
     server.log.error(err);
     process.exit(1);
