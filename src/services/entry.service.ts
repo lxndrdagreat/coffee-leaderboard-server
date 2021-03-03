@@ -67,7 +67,7 @@ export async function createEntry(
   const match = source.text.match(yesterdayRegex);
   if (match && match.length) {
     const group = match[1].replace(/-y\s*|--yesterday\s*/gi, '');
-    let daysAgo = 0;
+    let daysAgo = 1;
     if (group.length) {
       try {
         daysAgo = parseInt(group.trim(), 10);

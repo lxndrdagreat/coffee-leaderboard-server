@@ -35,6 +35,14 @@ export const slackClientSecret: string = getEnvironmentValue(
 export const slackSigningSecret: string = getEnvironmentValue(
   'SLACK_SIGNING_SECRET'
 );
+export const slackBotOAuthToken: string = getEnvironmentValue(
+  'SLACK_BOT_OAUTH_TOKEN'
+);
+export const slackChannelIds: string[] = process.env.hasOwnProperty(
+  'SLACK_COFFEE_CHANNEL_IDS'
+)
+  ? (process.env['SLACK_COFFEE_CHANNEL_IDS'] as string).split(',')
+  : [];
 
 export const databaseURL: string = getEnvironmentValue('DATABASE_URL');
 export const databaseName: string = getEnvironmentValue('DATABASE_NAME');

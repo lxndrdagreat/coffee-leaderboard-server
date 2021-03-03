@@ -8,6 +8,7 @@ import {
   UserAppTokenSchema
 } from '../schemas/user-app-token.schema';
 import { generatePasswordHash } from './generate-token';
+import { getUserInfoFromSlackAPI } from './slack.service';
 
 export class UserNotFoundError extends Error {
   constructor() {
@@ -72,11 +73,45 @@ export async function getOrCreateUser(username: string): Promise<UserSchema> {
   }
 }
 
-export async function createUser(username: string): Promise<UserSchema> {
+export async function getUserBySlackId(slackId: string): Promise<UserSchema> {
+  const users = await getUserCollection();
+  const user = await users.findOne({
+    slackId: slackId
+  });
+
+  if (!user) {
+    throw new UserNotFoundError();
+  }
+  return user;
+}
+
+export async function getOrCreateUserForSlackId(
+  slackUserId: string
+): Promise<UserSchema> {
+  try {
+    return await getUserBySlackId(slackUserId);
+  } catch (e) {
+    if (!(e instanceof UserNotFoundError)) {
+      throw e;
+    }
+  }
+  // fetch the user from the Slack API
+  const userInfo = await getUserInfoFromSlackAPI(slackUserId);
+  const user = await getOrCreateUser(userInfo.name);
+  user.slackId = slackUserId;
+  await updateUser(user);
+  return user;
+}
+
+export async function createUser(
+  username: string,
+  slackId: string | null = null
+): Promise<UserSchema> {
   const users = await getUserCollection();
 
   const result = await users.insertOne({
     userName: username,
+    slackId: slackId,
     tokens: []
   });
 

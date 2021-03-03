@@ -1,35 +1,72 @@
 import { FastifyInstance } from 'fastify';
 import { requireSlackAuth } from '../services/slack.service';
-import { SlackCreateAppAuthRequestBody } from '../schemas/slack.schema';
+import {
+  SlackCreateAppAuthRequestBody,
+  SlackEventBase,
+  SlackEventBody,
+  SlackEventUrlVerificationBody
+} from '../schemas/slack.schema';
 import {
   createServiceAuth,
+  getOrCreateUserForSlackId,
   getUserByUsername
 } from '../services/user-profile.service';
+import { slackChannelIds } from '../config/config';
+import { createEntry } from '../services/entry.service';
 
 export default (server: FastifyInstance) => {
-  // server.post(
-  //   '/api/webhooks/slack/event',
-  //   async (request, reply) => {
-  //
-  //   }
-  // );
+  server.post('/api/webhooks/slack/event', {
+    config: {
+      rawBody: true
+    },
+    handler: async (request, reply) => {
+      const payload = request.body as SlackEventBody;
+      if (!payload.type || !payload.token) {
+        return reply.code(403).send('Unauthorized');
+      }
 
-  /*
-    console.log(context);
+      try {
+        requireSlackAuth(request);
+      } catch (e) {
+        return reply.code(403).send();
+      }
 
-        const payload = context.body as SlackEventBody;
+      if (payload.type === 'url_verification') {
+        const { challenge } = payload as SlackEventUrlVerificationBody;
+        if (!challenge) {
+          return reply.code(403).send('Unauthorized');
+        }
+        return {
+          challenge
+        };
+      } else if (payload.type === 'event_callback') {
+        const { event } = payload as SlackEventBase;
 
-        // Only event being handled right now is url_verification needed to authorize the server
-        if (payload.type === 'url_verification') {
-          return DataResult.ok({
-            value: {
-              challenge: (payload as SlackEventUrlVerificationBody).challenge
+        // Must be a message with the text starting with the :coffee: emoji
+        if (
+          event.type === 'message' &&
+          event.channel_type === 'channel' &&
+          slackChannelIds.includes(event.channel) &&
+          event.text &&
+          event.text.toLowerCase().trim().startsWith(':coffee:')
+        ) {
+          // find the user
+          const user = await getOrCreateUserForSlackId(event.user);
+
+          await createEntry(user._id, {
+            type: 'slack',
+            text: event.text,
+            channel: {
+              name: event.channel,
+              id: event.channel
             }
           });
         }
+      }
 
-        return DataResult.ok();
-     */
+      return {};
+    }
+  });
 
   server.post('/api/webhooks/slack/create-auth', {
     config: {
@@ -70,45 +107,3 @@ export default (server: FastifyInstance) => {
     }
   });
 };
-
-//     /**
-//      * Handle :coffee: requests coming in from slack
-//      */
-//     data(
-//       '/slack/log',
-//       {
-//         post: async (context: RouteContext) => {
-//           const payload = context.body as SlackLogBody;
-//
-//           // validate
-//           if (
-//             !payload.user_name ||
-//             !payload.text ||
-//             !payload.channel_id ||
-//             !payload.channel_name
-//           ) {
-//             return DataResult.error('Invalid form body.');
-//           }
-//
-//           const user = await getOrCreateUser(payload.user_name);
-//
-//           await createEntry(user._id, {
-//             type: 'slack',
-//             text: payload.text,
-//             channel: {
-//               name: payload.channel_name,
-//               id: payload.channel_id
-//             }
-//           });
-//
-//           return DataResult.ok({
-//             value: 'ok'
-//           });
-//         }
-//       },
-//       {
-//         middleware: [validateSlackToken]
-//       }
-//     )
-//   ]
-// });

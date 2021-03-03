@@ -11,6 +11,24 @@ export interface SlackEventUrlVerificationBody extends SlackEventBody {
   challenge: string;
 }
 
+export interface SlackEventBase extends SlackEventBody {
+  type: 'event_callback';
+  team_id: string;
+  api_app_id: string;
+  authed_teams: string[];
+  event_id: string;
+  event_time: number;
+  event: {
+    type: string;
+    channel: string;
+    user: string;
+    text: string;
+    ts: string;
+    event_ts: string;
+    channel_type: string; /// channel and dm?
+  };
+}
+
 export interface SlackLogBody extends SlackMessageBody {
   user_name: string;
   text: string;

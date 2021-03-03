@@ -1,7 +1,8 @@
-import { slackSigningSecret } from '../config/config';
-// import { SlackEventBody, SlackMessageBody } from '../schemas/slack.schema';
+import { slackBotOAuthToken, slackSigningSecret } from '../config/config';
 import { createHmacDigestBase64 } from './generate-token';
 import { FastifyRequest } from 'fastify';
+import { SlackUserInfoModel } from '../schemas/slack-user-info.model';
+import axios from 'axios';
 
 export function hashSlackMessage(
   requestBody: string,
@@ -58,3 +59,16 @@ export function requireSlackAuth(request: FastifyRequest) {
 //     return MiddlewareResult.continue();
 //   }
 // );
+
+export async function getUserInfoFromSlackAPI(
+  userId: string
+): Promise<SlackUserInfoModel> {
+  const params = new URLSearchParams();
+  params.append('token', slackBotOAuthToken);
+  params.append('user', userId);
+  const response = await axios.post('https://slack.com/api/users.info', params);
+  if (!response.data.ok) {
+    throw new Error('Slack user does not exist.');
+  }
+  return response.data.user as SlackUserInfoModel;
+}
