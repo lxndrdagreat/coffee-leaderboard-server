@@ -1,5 +1,5 @@
 import { slackBotOAuthToken, slackSigningSecret } from '../config/config';
-import { createHmacDigestBase64 } from './generate-token';
+import { createHmacDigestHex } from './generate-token';
 import { FastifyRequest } from 'fastify';
 import { SlackUserInfoModel } from '../schemas/slack-user-info.model';
 import axios from 'axios';
@@ -8,7 +8,7 @@ export function hashSlackMessage(
   requestBody: string,
   timestampHeader: string
 ): string {
-  return createHmacDigestBase64(
+  return createHmacDigestHex(
     slackSigningSecret,
     `v0:${timestampHeader}:${requestBody}`
   );

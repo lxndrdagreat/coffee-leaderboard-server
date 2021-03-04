@@ -1,20 +1,20 @@
 import { FastifyInstance } from 'fastify';
 import { requireSlackAuth } from '../services/slack.service';
 import {
-  SlackCreateAppAuthRequestBody,
   SlackEventBase,
   SlackEventBody,
-  SlackEventUrlVerificationBody
+  SlackEventUrlVerificationBody,
+  SlackSlashCommandBase
 } from '../schemas/slack.schema';
 import {
   createServiceAuth,
-  getOrCreateUserForSlackId,
-  getUserByUsername
+  getOrCreateUserForSlackId
 } from '../services/user-profile.service';
 import { slackChannelIds } from '../config/config';
 import { createEntry } from '../services/entry.service';
 
 export default (server: FastifyInstance) => {
+  // Handle incoming events from Slack
   server.post('/api/webhooks/slack/event', {
     config: {
       rawBody: true
@@ -68,6 +68,7 @@ export default (server: FastifyInstance) => {
     }
   });
 
+  // Slash-command handler to register an auth token
   server.post('/api/webhooks/slack/create-auth', {
     config: {
       rawBody: true
@@ -80,14 +81,13 @@ export default (server: FastifyInstance) => {
         return reply.code(401).send();
       }
 
-      const body = request.body as SlackCreateAppAuthRequestBody;
-      if (!body.user_name) {
+      const body = request.body as SlackSlashCommandBase;
+      if (!body.user_id || body.command !== '/coffeeauth') {
         return reply.code(401).send();
       }
 
       try {
-        // TODO: maybe allow "getOrCreateUser"?
-        const user = await getUserByUsername(body.user_name);
+        const user = await getOrCreateUserForSlackId(body.user_id);
         const [, app] = await createServiceAuth(user._id, 'slack');
         return reply.type('application/json').send({
           // only show to the user who talked to the bot

@@ -24,6 +24,6 @@ export async function generatePasswordHash(
   });
 }
 
-export function createHmacDigestBase64(key: string, text: string): string {
+export function createHmacDigestHex(key: string, text: string): string {
   return createHmac('sha256', key).update(text).digest('hex');
 }

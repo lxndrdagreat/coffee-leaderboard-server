@@ -10,7 +10,7 @@ export interface UserAppTokenSchema {
 }
 
 export interface AppAuthRequestModel {
-  token: string;
+  serviceToken: string;
   app: string;
   serviceName: string;
 }

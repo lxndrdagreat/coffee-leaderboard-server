@@ -36,6 +36,21 @@ export interface SlackLogBody extends SlackMessageBody {
   channel_id: string;
 }
 
-export interface SlackCreateAppAuthRequestBody extends SlackMessageBody {
+export interface SlackSlashCommandBase {
+  /**
+   * @deprecated
+   */
+  token: string;
+  command: string;
+  text: string;
+  response_url: string;
+  trigger_id: string;
+  user_id: string;
+  /**
+   * @deprecated
+   */
   user_name: string;
+  team_id: string;
+  enterprise_id: string;
+  channel_id: string;
 }

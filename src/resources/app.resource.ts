@@ -1,7 +1,7 @@
 import { AppAuthRequestModel } from '../schemas/user-app-token.schema';
 import {
   confirmServiceAuth,
-  getUserByAppToken,
+  validateUserAppToken,
   UserNotFoundError
 } from '../services/user-profile.service';
 import { LogRequestModel } from '../schemas/log-request.model';
@@ -15,15 +15,20 @@ export default (server: FastifyInstance) => {
   server.post('/api/app/auth', async (request, reply) => {
     const payload = request.body as AppAuthRequestModel;
 
-    if (!payload.token || !payload.app || !payload.serviceName) {
+    if (!payload.serviceToken || !payload.app || !payload.serviceName) {
       return reply.code(400).send('Invalid request.');
     }
 
     try {
-      const [{ userName }, { appToken }] = await confirmServiceAuth(payload);
+      const [{ _id, userName }, { appToken }] = await confirmServiceAuth(
+        payload
+      );
       return {
-        token: appToken,
-        userName: userName
+        appToken: appToken,
+        user: {
+          userId: _id.toHexString(),
+          userName: userName
+        }
       };
     } catch (e) {
       return reply.code(400).send(e);
@@ -34,20 +39,31 @@ export default (server: FastifyInstance) => {
    * App-based logging
    */
   server.post('/api/app/log', async (request, reply) => {
+    // require token
+    if (
+      !request.headers.hasOwnProperty('x-leaderboard-token') ||
+      !request.headers.hasOwnProperty('x-leaderboard-app')
+    ) {
+      return reply.code(401).send('Unauthorized');
+    }
+    const appToken = request.headers['x-leaderboard-token'] as string;
+    const appName = request.headers['x-leaderboard-app'] as string;
+
+    // validate payload
     const payload = request.body as LogRequestModel;
-    if (!payload.token || !payload.message) {
+    if (!payload.message) {
       return reply.code(400).send('Invalid request.');
     }
 
     try {
-      const result = await getUserByAppToken(payload.token);
-      await createEntry(result._id, {
+      const [user, appInfo] = await validateUserAppToken(appToken, appName);
+      await createEntry(user._id, {
         type: 'app',
         text: payload.message,
-        app: result.app
+        app: appInfo.app ?? ''
       });
 
-      // TODO: outbound message to Slack Bot
+      // TODO: outbound message to Slack Bot to post in the Slack channel
 
       return 'ok';
     } catch (e) {

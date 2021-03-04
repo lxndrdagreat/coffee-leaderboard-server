@@ -180,11 +180,12 @@ export async function confirmServiceAuth(
   const user = await users.findOne({
     $and: [
       {
-        'tokens.serviceToken': authRequestInfo.token
+        'tokens.serviceToken': authRequestInfo.serviceToken
       },
       {
         'tokens.service': authRequestInfo.serviceName
       },
+      // Do not allow re-authing with the same serviceToken
       {
         'tokens.app': null
       },
@@ -200,7 +201,7 @@ export async function confirmServiceAuth(
 
   const appInfo = user.tokens.find(
     (app) =>
-      app.serviceToken === authRequestInfo.token &&
+      app.serviceToken === authRequestInfo.serviceToken &&
       app.service === authRequestInfo.serviceName
   );
   if (!appInfo) {
@@ -219,23 +220,50 @@ export async function confirmServiceAuth(
   return [user, appInfo];
 }
 
-export async function getUserByAppToken(
-  appToken: string
-): Promise<{ _id: ObjectId; userName: string; app: string }> {
+export type ValidatedUserAppTokenInfo = [
+  user: UserSchema,
+  appInfo: UserAppTokenSchema
+];
+
+export async function validateUserAppToken(
+  appToken: string,
+  appName: string
+): Promise<ValidatedUserAppTokenInfo> {
   const users = await getUserCollection();
   const found = await users
-    .aggregate<{ _id: ObjectId; userName: string; app: string }>([
+    .aggregate<{ user: UserSchema; appInfo: UserAppTokenSchema }>([
       {
-        $unwind: '$tokens'
+        $project: {
+          _id: 1,
+          userName: 1,
+          tokens: 1,
+          tokensCopy: '$tokens'
+        }
+      },
+      {
+        $unwind: '$tokensCopy'
       },
       {
         $match: {
-          'tokens.appToken': appToken
+          $and: [
+            {
+              'tokensCopy.appToken': appToken
+            },
+            {
+              'tokensCopy.app': appName
+            }
+          ]
         }
       },
       {
         $project: {
-          userName: 1
+          _id: false,
+          user: {
+            userName: '$userName',
+            _id: '$_id',
+            tokens: '$tokens'
+          },
+          appInfo: '$tokensCopy'
         }
       }
     ])
@@ -243,5 +271,5 @@ export async function getUserByAppToken(
   if (found.length === 0) {
     throw new UserNotFoundError();
   }
-  return found[0];
+  return [found[0].user, found[0].appInfo];
 }
