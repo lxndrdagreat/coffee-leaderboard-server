@@ -157,5 +157,5 @@ docker cp coffee_db:/coffee.gz ./coffee.gz
 
 ```
 docker cp ./coffee.gz coffee_db:/coffee.gz
-docker-compose exec db mongodump --uri="mongodb://localhost:27017/coffee" -u=root -p=password --authenticationDatabase=admin --archive=coffee.gz --gzip
+docker-compose exec db mongorestore --uri="mongodb://localhost:27017/coffee" -u=root -p=password --authenticationDatabase=admin --archive=coffee.gz --gzip
 ```
