@@ -143,3 +143,19 @@ Then, run the following to import the data:
 ```
 docker-compose exec api npm run seed-database
 ```
+
+## Data import/export
+
+### Export archive
+
+```
+docker-compose exec db mongodump --uri="mongodb://localhost:27017/coffee" -u=root -p=password --authenticationDatabase=admin --archive=coffee.gz --gzip
+docker cp coffee_db:/coffee.gz ./coffee.gz
+```
+
+### Import archive
+
+```
+docker cp ./coffee.gz coffee_db:/coffee.gz
+docker-compose exec db mongodump --uri="mongodb://localhost:27017/coffee" -u=root -p=password --authenticationDatabase=admin --archive=coffee.gz --gzip
+```

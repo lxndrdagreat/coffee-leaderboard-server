@@ -18,11 +18,15 @@ async function seedUsers(): Promise<OldIdToNewId[]> {
     return [];
   }
 
-  const fileData = JSON.parse((await readFile('users.json')).toString());
+  const fileData = (await readFile('users.json')).toString();
+  const lines = fileData
+    .split('\n')
+    .filter((line) => line.trim().length)
+    .map((line) => JSON.parse(line));
 
   const mapping: OldIdToNewId[] = [];
 
-  for (const userData of fileData) {
+  for (const userData of lines) {
     try {
       const existing = await getUserByUsername(userData['username']);
       mapping.push([userData['id'], existing._id]);
@@ -55,7 +59,12 @@ async function seedEntries(userMap: OldIdToNewId[]): Promise<void> {
     return;
   }
 
-  const entries = JSON.parse((await readFile('entries.json')).toString()) as {
+  const fileData = (await readFile('entries.json')).toString();
+
+  const entries = fileData
+    .split('\n')
+    .filter((line) => line.trim().length)
+    .map((line) => JSON.parse(line)) as {
     user_id: number;
     text: string;
     channel_id: string;
